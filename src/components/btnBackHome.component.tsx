@@ -5,7 +5,7 @@ export default function BtnBackHome() {
     const nav = useNavigate();
 
     function RedirectHomePage() {
-        nav('/');
+        nav('/home');
     }
 
     return (

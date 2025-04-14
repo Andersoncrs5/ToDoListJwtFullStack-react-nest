@@ -4,14 +4,21 @@ import Home from './pages/Home.pag';
 import './App.css'
 import Login from './pages/Login.pag';
 import Register from './pages/Register.pag';
+import NotFound from './pages/NotFoundRoute.pag';
+import MyTasks from './pages/MyTasks.pag';
 
 function App() {
   return (
     <Router basename="/">
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="*" element={<NotFound />} />
+
+        
+        <Route path="/task/my-tasks" element={<MyTasks />} />
+          
       </Routes>
     </Router>
   );
