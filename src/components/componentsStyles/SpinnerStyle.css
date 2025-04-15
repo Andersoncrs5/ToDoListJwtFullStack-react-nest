@@ -1,0 +1,7 @@
+.divSpinner {
+    position: absolute;
+    z-index: 999;
+    left: 47%;
+    bottom: 45%;
+    display: block;
+}

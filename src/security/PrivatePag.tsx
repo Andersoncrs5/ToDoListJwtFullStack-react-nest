@@ -1,11 +1,11 @@
-import { Navigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 
 export default function PrivatePag() {
-  const token = localStorage.getItem("token");
+  const nav = useNavigate();
 
-  if (!token) {
-    return <Navigate to="/home" replace />;
+  const token: string | null = localStorage.getItem("token");
+
+  if (token == null) {
+      nav('/home');
   }
-
-  return;
 }

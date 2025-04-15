@@ -1,16 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../Styles/Register.css';
 import BtnsBackSubmit from "../components/btnsBackSubmit.component";
 import { NavigateFunction, useNavigate } from 'react-router-dom';
 import api from '../axios/api';
 import { AxiosResponse } from 'axios';
 import RegisterDto from '../DTOs/register.dto';
+import SpinnerLoad from '../components/SpinnerLoad.component';
 
 export default function Register() {
     const [name, setName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const nav: NavigateFunction = useNavigate();
+    const spinner: HTMLElement | null = document.getElementById("spinnerDiv");
+
+    useEffect(() => {
+        checkToken();
+    }, []);
+
+    async function DivSpinnerTurnNone() {
+        if (!spinner) {
+            console.error('Div spinner not found');
+            return;
+        }
+
+        spinner.style.display = 'none';
+    }
+
+    function checkToken() {
+        const token = localStorage.getItem("token");
+        if (token) {
+            nav('/task/my-task');
+        }
+    }
 
     async function clearInput() {
         setEmail('');
@@ -55,7 +77,14 @@ export default function Register() {
     }
 
     async function HandleSubmit(e: React.FormEvent) {
+
         try {
+            if(!spinner) {
+                return;
+            }
+
+            spinner.style.display = 'block';
+
             e.preventDefault();
 
             const user: RegisterDto = {
@@ -67,24 +96,28 @@ export default function Register() {
             const res: AxiosResponse<any, any> = await api.post('/auth/register', user);
 
             if (res.status == 500) {
+                DivSpinnerTurnNone()
                 console.error(res.data);
                 alert('Error in server the make register');
             }
 
             if (res.status == 409) {
+                DivSpinnerTurnNone()
                 alert(res.data);
                 borderRedInput('email');
             }
 
             if (res.status == 200) {
+                DivSpinnerTurnNone()
                 localStorage.setItem("token", res.data.access_token);
                 localStorage.setItem("refreshToken", res.data.refresh_token);
                 await clearInput();
-                nav('/main');
+                nav('/task/my-tasks');
             }
 
         } catch (error) {
             console.error(error);
+            DivSpinnerTurnNone()
             alert('Error the make a register! Please try again later');
         }
     }
@@ -113,7 +146,9 @@ export default function Register() {
                             <div className="col-12">
                                 <BtnsBackSubmit />
                             </div>
-                            
+                            <div id="spinnerDiv" style={{ display: 'none' }} >
+                                <SpinnerLoad />
+                            </div>
                         </div>
                     </form>
                 </div>

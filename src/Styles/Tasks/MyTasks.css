@@ -1,7 +1,12 @@
 .wLengthMainTask {
-    width: 80%;
+    width: 90%;
 }
 #divMain {
-    background-color: black;
     color:white;
+}
+.loadStyle{
+    margin-top: 15%;
+}
+.NoTask {
+    margin-top: 15%;
 }
