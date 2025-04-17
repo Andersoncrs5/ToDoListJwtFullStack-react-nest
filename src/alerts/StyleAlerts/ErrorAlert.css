@@ -1,4 +1,7 @@
-#alert {
+#ErrorAlert {
     position: absolute;
-    top: 4%;
+    top: 0.5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
 }

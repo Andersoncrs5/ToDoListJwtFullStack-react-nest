@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../../Styles/Tasks/CreateTask.css';
 import BtnSubmitForm from '../../components/btnSubmitForm.component';
 import BtnBackMain from '../../components/BtnBackMain.component';
@@ -7,20 +7,25 @@ import { AxiosResponse } from 'axios';
 import api from '../../axios/api';
 import CreateTaskDto from '../../DTOs/tasks/createTask.dto';
 import SuccessAlert from '../../alerts/SuccessAlert.alert';
+import ErrorForm from '../HandleErrorForm/ErrorForm.handle';
+import axios from 'axios';
 
 export default function CreateTask() {
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const DivSuccessAlert: HTMLElement | null = document.getElementById("DivSuccessAlert");
-    const nav = useNavigate()
+    const [errorInput, setErrorInput] = useState<string[]>([]);
+
+    const successDivRef = useRef<HTMLDivElement>(null);
+    const errorDivRef = useRef<HTMLDivElement>(null);
+    const nav = useNavigate();
 
     useEffect(() => {
         checkToken();
         ClearInputs();
     }, []);
 
-    function NavMyTasks(){
+    function NavMyTasks() {
         nav('/task/my-tasks');
     }
 
@@ -36,57 +41,58 @@ export default function CreateTask() {
         }
     }
 
-    async function ShowAlertSuccess(){
-        if (!DivSuccessAlert) {
-            return;
+    function ShowAlertSuccess() {
+        if (successDivRef.current) {
+            successDivRef.current.style.display = 'block';
         }
-        
-        DivSuccessAlert.style.display = 'block';
     }
 
     async function HandleSubmit(e: React.FormEvent): Promise<void> {
         e.preventDefault();
+        setErrorInput([]);
+
+        const task: CreateTaskDto = {
+            title,
+            description,
+        }
+
         try {
-            const task: CreateTaskDto = {
-                title,
-                description,
-            }
-
             const res: AxiosResponse<any, any> = await api.post('/task', task);
-        
-            if (res.status == 500) {
-                console.error(res.data);
-                alert("Error in server! Please try again later");
-                return;
-            }
 
-            if (res.status == 401) {
-                alert("You are not authorized!");
-                ClearInputs()
-                NavMyTasks();
-            }
-
-            if (res.status == 404) {
-                NavMyTasks();
-            }
-
-            if (res.status == 200) {
+            if (res.status === 200) {
                 setSuccessMessage("Task created successfully!");
-                await ShowAlertSuccess()
+                ShowAlertSuccess();
                 ClearInputs();
-                setTimeout(()=> {NavMyTasks();}, 3000)   
+                setTimeout(() => { NavMyTasks(); }, 3000);
             }
 
-        } catch (e) {
-            console.error(e);
-
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response?.status === 401) {
+                    alert("You are not authorized!");
+                    ClearInputs();
+                    NavMyTasks();
+                } else if (error.response?.status === 404) {
+                    NavMyTasks();
+                } else {
+                    const mensagens = error.response?.data?.message;
+                    if (Array.isArray(mensagens)) {
+                        setErrorInput(mensagens);
+                    } else {
+                        console.error("Erro:", mensagens || error.message);
+                    }
+                }
+            } else {
+                console.error("Erro inesperado:", error);
+            }
         }
     }
 
     return (
         <main>
-            <div style={{ display: 'none' }} id="DivSuccessAlert" >
-                <SuccessAlert message={successMessage} /> 
+            {errorInput.length > 0 && <ErrorForm message={errorInput} />}
+            <div ref={successDivRef} style={{ display: 'none' }}>
+                <SuccessAlert message={successMessage} />
             </div>
             <div className="d-flex justify-content-center align-items-center vh-100">
                 <div className="p-5 rounded-2 border border-1 shadow">
@@ -129,6 +135,6 @@ export default function CreateTask() {
                     </form>
                 </div>
             </div>
-        </main>  
+        </main>
     );
 }

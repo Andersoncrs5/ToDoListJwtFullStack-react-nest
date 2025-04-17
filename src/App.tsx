@@ -9,6 +9,7 @@ import MyTasks from './pages/task/MyTasks.pag';
 import CreateTask from './pages/task/createTask.pag';
 import UpdateTask from './pages/task/updateTask.pag';
 import Profile from './pages/user/profile.pag';
+import UpdateUser from './pages/user/update.pag';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/task/uptask-task/:id" element={<UpdateTask />} />
 
         <Route path="/user/profile" element={<Profile />} />
+        <Route path="/user/update" element={<UpdateUser />} />
           
       </Routes>
     </Router>

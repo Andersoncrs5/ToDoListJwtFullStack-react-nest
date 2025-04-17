@@ -15,10 +15,11 @@ export default function Login() {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [errorInput, setErrorInput] = useState<string[]>([]);
-    const [errorLogin, setErrorLogin] = useState<boolean>(false);
+    const [msg, setMsg] = useState<string>('');
 
     const nav: NavigateFunction = useNavigate();
     const spinnerRef = useRef<HTMLDivElement>(null);
+    const errorDivRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -27,7 +28,7 @@ export default function Login() {
         }
     }, [nav]);
 
-    const clearInput = async () => {
+    const clearInput = () => {
         setEmail('');
         setPassword('');
     };
@@ -41,7 +42,6 @@ export default function Login() {
     async function HandleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setErrorInput([]);
-        setErrorLogin(false);
 
         if (!spinnerRef.current) {
             console.error('Div spinner not found');
@@ -58,21 +58,28 @@ export default function Login() {
             if (res.status === 200) {
                 localStorage.setItem("token", res.data.access_token);
                 localStorage.setItem("refreshToken", res.data.refresh_token);
-                await clearInput();
+                clearInput();
                 nav('/task/my-tasks');
-            } else if (res.status === 401) {
-                setErrorLogin(true);
-            } else if (res.status === 500) {
-                alert('Erro interno. Tente novamente mais tarde!');
             }
-
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                const mensagens = error.response?.data?.message;
-                if (Array.isArray(mensagens)) {
-                    setErrorInput(mensagens);
+                if (error.response?.status === 401) {
+                    setMsg('Dados inválidos');
+                    if (errorDivRef.current) {
+                        errorDivRef.current.style.display = 'block';
+                        setTimeout(() => {
+                            if (errorDivRef.current) {
+                                errorDivRef.current.style.display = 'none';
+                            }
+                        }, 4000);
+                    }
                 } else {
-                    console.log("Erro:", mensagens || error.message);
+                    const mensagens = error.response?.data?.message;
+                    if (Array.isArray(mensagens)) {
+                        setErrorInput(mensagens);
+                    } else {
+                        console.log("Erro:", mensagens || error.message);
+                    }
                 }
             } else {
                 console.log("Erro inesperado:", error);
@@ -85,44 +92,40 @@ export default function Login() {
     return (
         <main>
             {errorInput.length > 0 && <ErrorForm message={errorInput} />}
-            {errorLogin && <ErrorAlert message='Dados inválidos' />}
-            
+            <div ref={errorDivRef} style={{ display: 'none' }}>
+                <ErrorAlert message={msg} />
+            </div>
+
             <div className="d-flex justify-content-center align-items-center vh-100">
                 <div className="p-5 rounded-2 border border-1 shadow">
                     <form onSubmit={HandleSubmit}>
                         <div className="row">
                             <div className="col-12">
                                 <label htmlFor="email">Email:</label>
-                                <input 
-                                    onChange={(e) => { 
-                                        setEmail(e.target.value); 
-                                        setErrorInput([]); 
-                                        setErrorLogin(false); 
-                                    }} 
+                                <input
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        setErrorInput([]);
+                                    }}
                                     value={email}
-                                    type="email" 
-                                    name="email" 
-                                    className="form-control" 
+                                    type="email"
+                                    name="email"
+                                    className="form-control"
                                     id="email"
-                                    required 
                                 />
                             </div>
                             <div className="col-12 mt-1">
                                 <label htmlFor="password">Senha:</label>
-                                <input 
-                                    onChange={(e) => { 
-                                        setPassword(e.target.value); 
-                                        setErrorInput([]); 
-                                        setErrorLogin(false); 
-                                    }} 
+                                <input
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        setErrorInput([]);
+                                    }}
                                     value={password}
-                                    type="password" 
-                                    name="password" 
-                                    className="form-control" 
+                                    type="password"
+                                    name="password"
+                                    className="form-control"
                                     id="password"
-                                    required 
-                                    minLength={6}
-                                    maxLength={50}
                                 />
                             </div>
                             <div className="col-12">

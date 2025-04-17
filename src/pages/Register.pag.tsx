@@ -77,49 +77,43 @@ export default function Register() {
     }
 
     async function HandleSubmit(e: React.FormEvent) {
+        e.preventDefault();
 
-        try {
-            if(!spinner) {
-                return;
-            }
-
-            spinner.style.display = 'block';
-
-            e.preventDefault();
-
-            const user: RegisterDto = {
-                name,
-                email,
-                password
-            }
-
-            const res: AxiosResponse<any, any> = await api.post('/auth/register', user);
-
-            if (res.status == 500) {
-                DivSpinnerTurnNone()
-                console.error(res.data);
-                alert('Error in server the make register');
-            }
-
-            if (res.status == 409) {
-                DivSpinnerTurnNone()
-                alert(res.data);
-                borderRedInput('email');
-            }
-
-            if (res.status == 200) {
-                DivSpinnerTurnNone()
-                localStorage.setItem("token", res.data.access_token);
-                localStorage.setItem("refreshToken", res.data.refresh_token);
-                await clearInput();
-                nav('/task/my-tasks');
-            }
-
-        } catch (error) {
-            console.error(error);
-            DivSpinnerTurnNone()
-            alert('Error the make a register! Please try again later');
+        if(!spinner) {
+            return;
         }
+
+        spinner.style.display = 'block';
+
+        const user: RegisterDto = {
+            name,
+            email,
+            password
+        }
+
+        const res: AxiosResponse<any, any> = await api.post('/auth/register', user);
+
+        if (res.status == 500) {
+            DivSpinnerTurnNone()
+            console.error(res.data);
+            alert('Error in server the make register');
+        }
+
+        if (res.status == 409) {
+            DivSpinnerTurnNone()
+            alert(res.data);
+            borderRedInput('email');
+        }
+
+        if (res.status == 200) {
+            DivSpinnerTurnNone()
+            localStorage.setItem("token", res.data.access_token);
+            localStorage.setItem("refreshToken", res.data.refresh_token);
+            await clearInput();
+            nav('/task/my-tasks');
+        }
+
+        DivSpinnerTurnNone()        
     }
 
     return (
