@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import '../Styles/Home.css';
 import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+
+    useEffect(() => {
+        const token: string | null = localStorage.getItem("token");
+        if (token) {
+            nav('/task/my-tasks');
+        }
+    }, [] )
 
     const nav = useNavigate();
 

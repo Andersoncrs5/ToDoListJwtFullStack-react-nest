@@ -6,18 +6,27 @@ import { useNavigate } from 'react-router-dom';
 import { AxiosResponse } from 'axios';
 import api from '../../axios/api';
 import CreateTaskDto from '../../DTOs/tasks/createTask.dto';
+import SuccessAlert from '../../alerts/SuccessAlert.alert';
 
 export default function CreateTask() {
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
+    const [successMessage, setSuccessMessage] = useState<string>("");
+    const DivSuccessAlert: HTMLElement | null = document.getElementById("DivSuccessAlert");
     const nav = useNavigate()
 
     useEffect(() => {
         checkToken();
+        ClearInputs();
     }, []);
 
     function NavMyTasks(){
         nav('/task/my-tasks');
+    }
+
+    function ClearInputs() {
+        setTitle('');
+        setDescription('');
     }
 
     function checkToken(): void {
@@ -25,6 +34,14 @@ export default function CreateTask() {
         if (!token) {
             nav('/home');
         }
+    }
+
+    async function ShowAlertSuccess(){
+        if (!DivSuccessAlert) {
+            return;
+        }
+        
+        DivSuccessAlert.style.display = 'block';
     }
 
     async function HandleSubmit(e: React.FormEvent): Promise<void> {
@@ -45,6 +62,7 @@ export default function CreateTask() {
 
             if (res.status == 401) {
                 alert("You are not authorized!");
+                ClearInputs()
                 NavMyTasks();
             }
 
@@ -53,8 +71,10 @@ export default function CreateTask() {
             }
 
             if (res.status == 200) {
-                alert('Task created!')
-                NavMyTasks();
+                setSuccessMessage("Task created successfully!");
+                await ShowAlertSuccess()
+                ClearInputs();
+                setTimeout(()=> {NavMyTasks();}, 3000)   
             }
 
         } catch (e) {
@@ -65,6 +85,9 @@ export default function CreateTask() {
 
     return (
         <main>
+            <div style={{ display: 'none' }} id="DivSuccessAlert" >
+                <SuccessAlert message={successMessage} /> 
+            </div>
             <div className="d-flex justify-content-center align-items-center vh-100">
                 <div className="p-5 rounded-2 border border-1 shadow">
                     <form onSubmit={HandleSubmit}>

@@ -4,7 +4,7 @@ import BtnsBackSubmit from "../components/btnsBackSubmit.component";
 import { NavigateFunction, useNavigate } from 'react-router-dom';
 import api from '../axios/api';
 import { AxiosResponse } from 'axios';
-import RegisterDto from '../DTOs/register.dto';
+import RegisterDto from '../DTOs/user/register.dto';
 import SpinnerLoad from '../components/SpinnerLoad.component';
 
 export default function Register() {

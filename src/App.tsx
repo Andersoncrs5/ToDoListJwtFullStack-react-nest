@@ -7,6 +7,8 @@ import Register from './pages/Register.pag';
 import NotFound from './pages/NotFoundRoute.pag';
 import MyTasks from './pages/task/MyTasks.pag';
 import CreateTask from './pages/task/createTask.pag';
+import UpdateTask from './pages/task/updateTask.pag';
+import Profile from './pages/user/profile.pag';
 
 function App() {
   return (
@@ -20,7 +22,9 @@ function App() {
         
         <Route path="/task/my-tasks" element={<MyTasks />} />
         <Route path="/task/create-task" element={<CreateTask />} />
+        <Route path="/task/uptask-task/:id" element={<UpdateTask />} />
 
+        <Route path="/user/profile" element={<Profile />} />
           
       </Routes>
     </Router>

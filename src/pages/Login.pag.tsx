@@ -1,134 +1,140 @@
-// import React from "react";
-import { useEffect, useState } from 'react';
-import '../Styles/Login.css';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, NavigateFunction } from 'react-router-dom';
+import '../Styles/Login.css'
+
 import BtnsBackSubmit from "../components/btnsBackSubmit.component";
-import LoginDto from '../DTOs/login.dto';
+import LoginDto from '../DTOs/user/login.dto';
 import api from '../axios/api';
-import { AxiosResponse } from 'axios';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
+import axios, { AxiosResponse } from 'axios';
+
 import SpinnerLoad from '../components/SpinnerLoad.component';
+import ErrorForm from './HandleErrorForm/ErrorForm.handle';
+import ErrorAlert from '../alerts/ErrorAlert.alert';
 
 export default function Login() {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [errorInput, setErrorInput] = useState<string[]>([]);
+    const [errorLogin, setErrorLogin] = useState<boolean>(false);
+
     const nav: NavigateFunction = useNavigate();
-    const spinner: HTMLElement | null = document.getElementById("spinnerDiv");
+    const spinnerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        checkToken();
-    }, []);
-
-    function checkToken() {
         const token = localStorage.getItem("token");
         if (token) {
             nav('/task/my-tasks');
         }
-    }
+    }, [nav]);
 
-    async function clearInput(){
+    const clearInput = async () => {
         setEmail('');
         setPassword('');
-    }
+    };
 
-    async function DivSpinnerTurnNone() {
-        if (!spinner) {
+    const DivSpinnerTurnNone = () => {
+        if (spinnerRef.current) {
+            spinnerRef.current.style.display = 'none';
+        }
+    };
+
+    async function HandleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        setErrorInput([]);
+        setErrorLogin(false);
+
+        if (!spinnerRef.current) {
             console.error('Div spinner not found');
             return;
         }
 
-        spinner.style.display = 'none';
-    }
+        spinnerRef.current.style.display = 'block';
 
-    async function HandleSubmit(e: React.FormEvent) {
+        const user: LoginDto = { email, password };
+
         try {
-            e.preventDefault();
-
-            if (!spinner) {
-                console.error('Div spinner not found');
-                return;
-            }
-
-            spinner.style.display = 'block';
-
-            const user: LoginDto = {
-                email,
-                password
-            }
-
             const res: AxiosResponse<any, any> = await api.post('/auth/login', user);
 
-            if (res.status == 500){
-                console.error(res.data)
-                DivSpinnerTurnNone()
-                alert('Error internal in server. please try again later!');
-            }
-
-            if (res.status == 401){
-                DivSpinnerTurnNone()
-                alert('Datas invalids');
-            }
-
-            if (res.status == 200) {
-                DivSpinnerTurnNone()
+            if (res.status === 200) {
                 localStorage.setItem("token", res.data.access_token);
                 localStorage.setItem("refreshToken", res.data.refresh_token);
                 await clearInput();
                 nav('/task/my-tasks');
+            } else if (res.status === 401) {
+                setErrorLogin(true);
+            } else if (res.status === 500) {
+                alert('Erro interno. Tente novamente mais tarde!');
             }
 
-            DivSpinnerTurnNone()
-        } catch (e) {
-            console.error(e);
-            DivSpinnerTurnNone()
-            alert('Error the make login try again later');
-        }
-    }
-
-    function messageValidInSmall(small: string, message: string) {
-        const input: HTMLElement | null = document.getElementById(small);
-
-        if (!small || !message) {
-            console.error('Error the pass the name tag small or the message')
-            return;
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                const mensagens = error.response?.data?.message;
+                if (Array.isArray(mensagens)) {
+                    setErrorInput(mensagens);
+                } else {
+                    console.log("Erro:", mensagens || error.message);
+                }
+            } else {
+                console.log("Erro inesperado:", error);
+            }
         }
 
-        if (input == null) {
-            console.error('Error the get tag small of' + small);
-            return;
-        }
-
-        input.style.display = 'block';
-        input.innerHTML = message;
-
-        setTimeout(() => {
-            input.style.display = 'none';
-        }, 8000);
+        DivSpinnerTurnNone();
     }
 
     return (
         <main>
+            {errorInput.length > 0 && <ErrorForm message={errorInput} />}
+            {errorLogin && <ErrorAlert message='Dados inválidos' />}
+            
             <div className="d-flex justify-content-center align-items-center vh-100">
                 <div className="p-5 rounded-2 border border-1 shadow">
-                    <form onSubmit={HandleSubmit} >
+                    <form onSubmit={HandleSubmit}>
                         <div className="row">
                             <div className="col-12">
                                 <label htmlFor="email">Email:</label>
-                                <input onChange={(e) => { setEmail(e.target.value) } } type="email" name="email" className="form-control"  id="email" required max={150} min={1}  />
+                                <input 
+                                    onChange={(e) => { 
+                                        setEmail(e.target.value); 
+                                        setErrorInput([]); 
+                                        setErrorLogin(false); 
+                                    }} 
+                                    value={email}
+                                    type="email" 
+                                    name="email" 
+                                    className="form-control" 
+                                    id="email"
+                                    required 
+                                />
                             </div>
-                            <div className="col-12 mt-1 ">
-                                <label htmlFor="password">Password:</label>
-                                <input onChange={(e) => { setPassword(e.target.value) } } type="password" name="password" className="form-control  "  id="password" required max={50} min={6}  />
+                            <div className="col-12 mt-1">
+                                <label htmlFor="password">Senha:</label>
+                                <input 
+                                    onChange={(e) => { 
+                                        setPassword(e.target.value); 
+                                        setErrorInput([]); 
+                                        setErrorLogin(false); 
+                                    }} 
+                                    value={password}
+                                    type="password" 
+                                    name="password" 
+                                    className="form-control" 
+                                    id="password"
+                                    required 
+                                    minLength={6}
+                                    maxLength={50}
+                                />
                             </div>
                             <div className="col-12">
                                 <BtnsBackSubmit />
                             </div>
-                            <div id="spinnerDiv" style={{ display: 'none' }} >
+                            <div ref={spinnerRef} style={{ display: 'none' }}>
                                 <SpinnerLoad />
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
-        </main>  
+        </main>
     );
 }
